@@ -1,3 +1,5 @@
+<img src="assets/icons/project-header.png" alt="Votablit — Vote + Abliterate" width="100%">
+
 # Votablit
 
 **Vote + Abliterate** — The community decides which AI model gets abliterated next. Vote for your pick, the top model gets processed weekly, and the result is published on HuggingFace.
