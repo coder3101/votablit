@@ -1,18 +1,27 @@
+# fly.toml app configuration file generated for votablit on 2026-06-13T19:53:28+05:30
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
 app = 'votablit'
 primary_region = 'sjc'
 
 [build]
 
-[env]
-  DATABASE_PATH = "/data/leaderboard.db"
-
 [deploy]
   strategy = 'immediate'
+
+[env]
+  DATABASE_PATH = '/data/leaderboard.db'
+
+[[mounts]]
+  source = 'leaderboard_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = false
+  auto_stop_machines = 'off'
   auto_start_machines = true
   min_machines_running = 1
   processes = ['app']
@@ -24,9 +33,5 @@ primary_region = 'sjc'
 
 [[vm]]
   memory = '512mb'
-  cpu_kind = 'shared'
   cpus = 1
-
-[mounts]
-  source = 'leaderboard_data'
-  destination = '/data'
+  memory_mb = 512
