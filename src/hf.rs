@@ -16,6 +16,8 @@ pub enum HfError {
     ReachabilityError(String),
     /// The model exceeds the maximum allowed size.
     TooLarge { size_gb: f64 },
+    /// The model is missing config.json (likely GGUF or non-standard format).
+    MissingConfigJson,
 }
 
 impl std::fmt::Display for HfError {
@@ -30,6 +32,12 @@ impl std::fmt::Display for HfError {
                     "Model is {size_gb:.1} GB which exceeds the 70 GB limit"
                 )
             }
+            Self::MissingConfigJson => {
+                write!(
+                    f,
+                    "Model is missing config.json — only full model architectures are allowed (no GGUF or quantized-only formats)"
+                )
+            }
         }
     }
 }
@@ -40,7 +48,8 @@ impl From<HfError> for AppError {
             HfError::InvalidUrl | HfError::ModelNotFound => {
                 AppError::BadRequest(err.to_string())
             }
-            HfError::ReachabilityError(_) | HfError::TooLarge { .. } => {
+            HfError::ReachabilityError(_) | HfError::TooLarge { .. }
+            | HfError::MissingConfigJson => {
                 AppError::BadRequest(err.to_string())
             }
         }
@@ -113,6 +122,10 @@ pub async fn validate_model_on_hf(client: &Client, model_id: &str) -> Result<(),
         return Err(HfError::TooLarge { size_gb });
     }
 
+    if !entries.iter().any(|e| e.path == "config.json") {
+        return Err(HfError::MissingConfigJson);
+    }
+
     Ok(())
 }
 
@@ -153,6 +166,10 @@ pub async fn validate_hf_link(client: &Client, url: &str) -> Result<(String, f64
 
     if total_bytes > MAX_MODEL_SIZE_BYTES {
         return Err(HfError::TooLarge { size_gb });
+    }
+
+    if !entries.iter().any(|e| e.path == "config.json") {
+        return Err(HfError::MissingConfigJson);
     }
 
     Ok((model_id, size_gb))
