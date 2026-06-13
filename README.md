@@ -1,15 +1,9 @@
 <img src="assets/icons/project-header.png" alt="Votablit — Vote + Abliterate" width="100%">
 
-# Votablit
+[![CI](https://github.com/coder3101/votablit/actions/workflows/ci.yml/badge.svg)](https://github.com/coder3101/votablit/actions/workflows/ci.yml)
+[![Deploy](https://img.shields.io/badge/deployed-live-brightgreen)](https://votablit.fly.dev)
 
-**Vote + Abliterate** — The community decides which AI model gets abliterated next. Vote for your pick, the top model gets processed weekly, and the result is published on HuggingFace.
-
-## Stack
-
-- **Backend:** Rust, Axum 0.8, SQLite via sqlx 0.9
-- **Frontend:** Askama templates, HTMX, vanilla CSS
-- **Deploy:** Fly.io single instance with persistent volume
-- **CI:** GitHub Actions (clippy + nextest on push)
+The community decides which AI model gets abliterated next. Vote for your pick, the top model gets processed weekly, and the result is published on [HuggingFace](https://huggingface.co).
 
 ## Quick Start
 
@@ -25,19 +19,12 @@ ADMIN_TOKEN=dev-secret make run
 
 The database is created automatically on first launch at `./leaderboard.db` (configurable via `DATABASE_PATH`).
 
-## Makefile
+## Stack
 
-```bash
-make help            # list all targets
-make run             # run locally (ADMIN_TOKEN=dev-secret)
-make test            # run all 81 tests
-make lint            # clippy
-make ci              # lint + test
-make sqlx-prepare    # regenerate offline query cache
-make docker-run      # build + run in Docker
-make deploy          # fly deploy
-make clean           # remove artifacts
-```
+- **Backend:** Rust, Axum 0.8, SQLite via sqlx 0.9
+- **Frontend:** Askama templates, HTMX, vanilla CSS
+- **Deploy:** Fly.io single instance with persistent volume
+- **CI:** GitHub Actions (clippy + nextest on push)
 
 ## Environment Variables
 
@@ -60,7 +47,9 @@ make clean           # remove artifacts
 | `POST` | `/api/vote` | Cast a vote |
 | `POST` | `/api/models` | Submit a model for abliteration |
 
-### Admin (requires `Authorization: Bearer <ADMIN_TOKEN>`)
+### Admin
+
+Requires `Authorization: Bearer <ADMIN_TOKEN>`.
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -75,6 +64,20 @@ make clean           # remove artifacts
 - **Voting:** 3 votes per IP per hour, 1 vote per model per UUID
 - **Model submission:** 1 per IP per day
 - **Board cap:** 50 models max
+
+## Makefile
+
+```bash
+make help            # list all targets
+make run             # run locally (ADMIN_TOKEN=dev-secret)
+make test            # run all 81 tests
+make lint            # clippy
+make ci              # lint + test
+make sqlx-prepare    # regenerate offline query cache
+make docker-run      # build + run in Docker
+make deploy          # fly deploy
+make clean           # remove artifacts
+```
 
 ## Tests
 
