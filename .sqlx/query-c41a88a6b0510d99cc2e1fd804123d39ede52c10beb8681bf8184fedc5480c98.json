@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT model_id as \"model_id!\", vote_count, hf_link\n           FROM models ORDER BY vote_count DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "model_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "models",
+            "name": "model_id"
+          }
+        }
+      },
+      {
+        "name": "vote_count",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "models",
+            "name": "vote_count"
+          }
+        }
+      },
+      {
+        "name": "hf_link",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "models",
+            "name": "hf_link"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "c41a88a6b0510d99cc2e1fd804123d39ede52c10beb8681bf8184fedc5480c98"
+}

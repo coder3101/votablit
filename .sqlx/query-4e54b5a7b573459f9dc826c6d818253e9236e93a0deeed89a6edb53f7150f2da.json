@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO deliveries (model_id, vote_count, hf_link, notes, kl_divergence, refused, total_prompts) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "4e54b5a7b573459f9dc826c6d818253e9236e93a0deeed89a6edb53f7150f2da"
+}

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abliteration Board</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page">
+    <header class="hero">
+        <h1><span>Abliteration</span> Board</h1>
+        <p>Request abliteration for any HuggingFace model. The community votes, top model gets processed and published weekly.</p>
+        <div class="hero-links">
+            <a class="gh-link" href="https://github.com/coder3101/votablit" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                Source
+            </a>
+            <div class="rules-pill" onclick="this.classList.toggle('open')" id="rules-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Rules
+                <span class="rules-arrow">&#9662;</span>
+                <div class="rules-dropdown">
+                    <ul class="rules-list">
+                        <li>Model must exist on HuggingFace and be under 70 GB</li>
+                        <li>Already abliterated models cannot be requested again</li>
+                        <li>Max 50 active requests &middot; 1 submission per IP per day</li>
+                        <li>3 votes per IP per hour &middot; 1 vote per model per person</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-value">{{ models.len() }}</div><div class="stat-label">Requests</div></div>
+        <div class="stat"><div class="stat-value">{{ total_votes }}</div><div class="stat-label">Votes Cast</div></div>
+        <div class="stat"><div class="stat-value">{{ total_deliveries }}</div><div class="stat-label">Abliterated</div></div>
+    </div>
+
+    {% if models.len() > 0 %}
+    <div class="winner-banner">
+        <div class="winner-icon">&#127942;</div>
+        <div class="winner-info">
+            <h3>Next up: <span>{{ models[0].model_id }}</span></h3>
+            <p>{{ models[0].vote_count }} votes &middot; will be abliterated at end of cycle</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="tabs-row">
+        <div class="main-tabs">
+            <button class="main-tab on" onclick="showTab('vote',this)">
+                Requests<span class="count">{{ models.len() }}</span>
+            </button>
+            <button class="main-tab" onclick="showTab('delivered',this)">
+                Abliterated<span class="count">{{ total_deliveries }}</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="pane-vote" class="tab-pane on">
+        <div class="card">
+            <div class="card-head">
+                <h2>Abliteration Requests</h2>
+                <span style="font-size:0.7rem;color:var(--text-3)">click &#9650; to vote</span>
+            </div>
+            <div class="card-body">
+                <div id="leaderboard"
+                     hx-get="/leaderboard/table"
+                     hx-trigger="every 5s"
+                     hx-swap="innerHTML"
+                     hx-target="this">
+                    {% include "leaderboard_table.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pane-delivered" class="tab-pane">
+        <div class="search-wrapper">
+            <div class="search-bar">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="del-search-global" class="search-input" placeholder="Search abliterated models…" oninput="searchDeliveries(this.value)" onfocus="searchDeliveries(this.value)">
+                <kbd class="search-kbd">ESC</kbd>
+            </div>
+            <div class="search-dropdown" id="search-dropdown">
+                <div id="search-results"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-head">
+                <h2>Abliterated Models</h2>
+                <div class="sort-controls">
+                    <button class="sort-btn on" id="sort-date"
+                            hx-get="/deliveries/list?page=1&sort=date"
+                            hx-target="#deliveries" hx-swap="innerHTML"
+                            onclick="setSort(this)">Newest</button>
+                    <button class="sort-btn" id="sort-kl"
+                            hx-get="/deliveries/list?page=1&sort=kl"
+                            hx-target="#deliveries" hx-swap="innerHTML"
+                            onclick="setSort(this)">Best KL</button>
+                    <button class="sort-btn" id="sort-refusal"
+                            hx-get="/deliveries/list?page=1&sort=refusal"
+                            hx-target="#deliveries" hx-swap="innerHTML"
+                            onclick="setSort(this)">Least Refused</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="deliveries"
+                     hx-get="/deliveries/list?page=1"
+                     hx-trigger="every 30s"
+                     hx-swap="innerHTML"
+                     hx-target="this">
+                    {% include "deliveries_list.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button class="fab" onclick="openModal()" title="Request abliteration">+</button>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <h3>Request Abliteration</h3>
+        <form id="add-form"
+              hx-post="/add-model"
+              hx-target="#toasts"
+              hx-swap="beforeend"
+              hx-on::after-request="if(event.detail.successful){closeModal();this.reset();refreshLeaderboard();}">
+            <div class="field">
+                <label class="field-label">Model Name</label>
+                <input type="text" name="model_id" class="field-input" placeholder="e.g. meta-llama/Llama-3-8B" required maxlength="100" autofocus>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-accent">Submit</button>
+            </div>
+            <p class="hint">1 submission per IP per day &middot; max 50 models</p>
+        </form>
+    </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+    if (!localStorage.getItem('client_uuid'))
+        localStorage.setItem('client_uuid', crypto.randomUUID());
+
+    let deliveriesData = [];
+    fetchDeliveries();
+
+    function fetchDeliveries() {
+        fetch('/api/deliveries?per_page=100').then(r => r.json()).then(d => { deliveriesData = d.items || []; }).catch(() => {});
+    }
+
+    function showTab(name, btn) {
+        document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('on'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+        btn.classList.add('on');
+        document.getElementById('pane-' + name).classList.add('on');
+    }
+    function setSort(btn) {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+    }
+    function openModal() {
+        document.getElementById('modal-overlay').classList.add('open');
+        document.querySelector('.modal .field-input').focus();
+    }
+    function closeModal() {
+        document.getElementById('modal-overlay').classList.remove('open');
+    }
+    function refreshLeaderboard() {
+        htmx.trigger('#leaderboard', 'refresh');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    document.body.addEventListener('htmx:responseError', function(e) {
+        try { toast(JSON.parse(e.detail.xhr.responseText).error, false); }
+        catch { toast('Request failed', false); }
+    });
+
+    htmx.on('htmx:afterSwap', function(e) {
+        if (e.detail.target && e.detail.target.id === 'deliveries') {
+            fetchDeliveries();
+        }
+    });
+
+    function searchDeliveries(query) {
+        const dropdown = document.getElementById('search-dropdown');
+        const results = document.getElementById('search-results');
+        const q = query.toLowerCase().trim();
+        if (!q) { dropdown.classList.remove('open'); return; }
+        const matches = deliveriesData.filter(d =>
+            d.model_id.toLowerCase().includes(q) ||
+            (d.notes || '').toLowerCase().includes(q)
+        );
+        if (matches.length === 0) {
+            results.innerHTML = '<div class="search-empty">No abliterated models match "' + escapeHtml(query) + '"</div>';
+        } else {
+            results.innerHTML = matches.map(d => `
+                <a class="search-result" href="${d.hf_link}" target="_blank" rel="noopener">
+                    <div class="search-result-icon">&#9989;</div>
+                    <div class="search-result-info">
+                        <div class="search-result-name">${escapeHtml(d.model_id)}</div>
+                        <div class="search-result-meta">KL ${d.kl_divergence} &middot; ${d.refused}/${d.total_prompts} refused &middot; ${d.vote_count} votes &middot; ${d.delivered_at}${d.notes ? ' &middot; ' + escapeHtml(d.notes) : ''}</div>
+                    </div>
+                    <span class="search-result-link">HuggingFace &rarr;</span>
+                </a>
+            `).join('');
+        }
+        dropdown.classList.add('open');
+    }
+    function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function closeSearch() { document.getElementById('search-dropdown').classList.remove('open'); }
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.search-wrapper')) closeSearch();
+        if (!e.target.closest('.rules-pill')) document.getElementById('rules-pill')?.classList.remove('open');
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeSearch(); closeModal(); }
+    });
+    function toast(msg, ok) {
+        const d = document.createElement('div');
+        d.className = 'toast ' + (ok ? 'toast-ok' : 'toast-err');
+        d.textContent = msg;
+        document.getElementById('toasts').appendChild(d);
+        setTimeout(() => d.remove(), 4000);
+    }
+</script>
+</body>
+</html>

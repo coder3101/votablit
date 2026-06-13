@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT model_id as \"model_id!\", vote_count\n           FROM models WHERE model_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "model_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "models",
+            "name": "model_id"
+          }
+        }
+      },
+      {
+        "name": "vote_count",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "models",
+            "name": "vote_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "0d0d9da6a0fe76419f8cfd6dea14d0ca0f0832c4b91ed5895a9f3baddade6274"
+}

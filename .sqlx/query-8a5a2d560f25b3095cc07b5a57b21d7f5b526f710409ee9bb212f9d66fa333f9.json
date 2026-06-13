@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM models WHERE vote_count = 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "8a5a2d560f25b3095cc07b5a57b21d7f5b526f710409ee9bb212f9d66fa333f9"
+}

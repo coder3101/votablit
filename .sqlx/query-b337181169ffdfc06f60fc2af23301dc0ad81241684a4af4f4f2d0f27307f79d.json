@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE models SET hf_link = ? WHERE model_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "b337181169ffdfc06f60fc2af23301dc0ad81241684a4af4f4f2d0f27307f79d"
+}

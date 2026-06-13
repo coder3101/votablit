@@ -1,0 +1,122 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, model_id as \"model_id!\", vote_count,\n                          hf_link as \"hf_link!\", notes,\n                          kl_divergence, refused, total_prompts,\n                          delivered_at as \"delivered_at!\"\n                   FROM deliveries ORDER BY (CAST(refused AS REAL) / MAX(total_prompts, 1)) ASC LIMIT ? OFFSET ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "model_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "model_id"
+          }
+        }
+      },
+      {
+        "name": "vote_count",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "vote_count"
+          }
+        }
+      },
+      {
+        "name": "hf_link!",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "hf_link"
+          }
+        }
+      },
+      {
+        "name": "notes",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "notes"
+          }
+        }
+      },
+      {
+        "name": "kl_divergence",
+        "ordinal": 5,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "kl_divergence"
+          }
+        }
+      },
+      {
+        "name": "refused",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "refused"
+          }
+        }
+      },
+      {
+        "name": "total_prompts",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "total_prompts"
+          }
+        }
+      },
+      {
+        "name": "delivered_at!",
+        "ordinal": 8,
+        "type_info": "Datetime",
+        "origin": {
+          "Table": {
+            "table": "deliveries",
+            "name": "delivered_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8e775e5021132ba62d769b246fb1a8e64eb4bf49172a9bdcf1656171ad820e39"
+}

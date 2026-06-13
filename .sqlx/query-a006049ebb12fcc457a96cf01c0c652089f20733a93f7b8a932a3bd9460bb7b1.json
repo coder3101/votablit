@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO models (model_id, vote_count, created_by_ip) VALUES (?, 0, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "a006049ebb12fcc457a96cf01c0c652089f20733a93f7b8a932a3bd9460bb7b1"
+}

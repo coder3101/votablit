@@ -1,0 +1,34 @@
+{% if models.is_empty() %}
+<div class="empty">
+    <div class="empty-icon">&#128269;</div>
+    <h3>No requests yet</h3>
+    <p>Be the first to request an abliteration</p>
+</div>
+{% else %}
+<ul class="lb-list">
+    {% for m in models %}
+    <li class="lb-item">
+        <div class="lb-rank {% if loop.index == 1 %}r1{% elif loop.index == 2 %}r2{% elif loop.index == 3 %}r3{% endif %}">
+            {{ loop.index }}
+        </div>
+        <div class="lb-info">
+            <div class="lb-name">{{ m.model_id }}</div>
+            {% if m.hf_link.is_some() %}
+            <div class="lb-hf"><a href="{{ m.hf_link.as_ref().unwrap() }}" target="_blank" rel="noopener">huggingface.co &rarr;</a></div>
+            {% endif %}
+        </div>
+        <div class="lb-votes">{{ m.vote_count }}<small>votes</small></div>
+        <form class="lb-vote-form"
+              hx-post="/vote"
+              hx-vals='js:{"client_uuid": localStorage.getItem("client_uuid")}'
+              hx-target="#toasts"
+              hx-swap="beforeend"
+              hx-disabled-elt=".lb-vote-btn"
+              hx-on::after-request="if(event.detail.successful) { htmx.trigger('#leaderboard','refresh'); }">
+            <input type="hidden" name="model_id" value="{{ m.model_id }}">
+            <button type="submit" class="lb-vote-btn" title="Vote for {{ m.model_id }}">&#9650;</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}

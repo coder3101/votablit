@@ -1,0 +1,4 @@
+<option value="" disabled selected>Choose a model…</option>
+{% for m in models %}
+<option value="{{ m.model_id }}">{{ m.model_id }}</option>
+{% endfor %}

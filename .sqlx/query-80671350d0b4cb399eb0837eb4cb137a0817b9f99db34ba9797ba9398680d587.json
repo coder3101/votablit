@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE models SET vote_count = vote_count + 1 WHERE model_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "80671350d0b4cb399eb0837eb4cb137a0817b9f99db34ba9797ba9398680d587"
+}

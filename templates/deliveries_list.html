@@ -1,0 +1,52 @@
+{% if deliveries.is_empty() && page == 1 %}
+<div class="empty">
+    <div class="empty-icon">&#128230;</div>
+    <h3>No abliterated models yet</h3>
+    <p>Models will appear here once they've been abliterated</p>
+</div>
+{% else %}
+<table class="del-table">
+    <thead>
+        <tr>
+            <th class="del-th-model">Model</th>
+            <th class="del-th-num">KL</th>
+            <th class="del-th-num">Refused</th>
+            <th class="del-th-date">Date</th>
+            <th class="del-th-link"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in deliveries %}
+        <tr class="del-row">
+            <td class="del-td-model">
+                <span class="del-name">{{ d.model_id }}</span>
+                {% if d.notes.is_some() %}
+                <span class="del-tag">{{ d.notes.as_ref().unwrap() }}</span>
+                {% endif %}
+            </td>
+            <td class="del-td-num">{{ d.kl_divergence }}</td>
+            <td class="del-td-num">{{ d.refused }}/{{ d.total_prompts }}</td>
+            <td class="del-td-date">{{ d.delivered_at }}</td>
+            <td class="del-td-link"><a href="{{ d.hf_link }}" target="_blank" rel="noopener">HF &rarr;</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <button class="btn btn-ghost btn-sm"
+            hx-get="/deliveries/list?page={{ page - 1 }}&sort={{ sort }}"
+            hx-target="#deliveries"
+            hx-swap="innerHTML">&larr; Prev</button>
+    {% endif %}
+    <span class="page-info">{{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <button class="btn btn-ghost btn-sm"
+            hx-get="/deliveries/list?page={{ page + 1 }}&sort={{ sort }}"
+            hx-target="#deliveries"
+            hx-swap="innerHTML">Next &rarr;</button>
+    {% endif %}
+</div>
+{% endif %}
+{% endif %}
