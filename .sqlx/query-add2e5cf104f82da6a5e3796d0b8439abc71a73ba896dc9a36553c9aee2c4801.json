@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM deliveries WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "add2e5cf104f82da6a5e3796d0b8439abc71a73ba896dc9a36553c9aee2c4801"
+}

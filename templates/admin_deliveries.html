@@ -1,0 +1,38 @@
+{% if deliveries.is_empty() %}
+<div class="empty">
+    <div class="empty-icon">&#128230;</div>
+    <h3>No deliveries</h3>
+    <p>Abliterated models will appear here</p>
+</div>
+{% else %}
+<div style="overflow-x:auto;">
+<table class="del-table">
+    <thead>
+        <tr>
+            <th>Model</th>
+            <th class="del-th-num">Votes</th>
+            <th class="del-th-num">KL</th>
+            <th class="del-th-num">Refused</th>
+            <th class="del-th-date">Date</th>
+            <th class="del-th-link">HF</th>
+            <th style="text-align:center;width:4rem;">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in deliveries %}
+        <tr class="del-row">
+            <td class="del-td-model"><span class="del-name">{{ d.model_id }}</span></td>
+            <td class="del-td-num">{{ d.vote_count }}</td>
+            <td class="del-td-num">{{ d.kl_divergence }}</td>
+            <td class="del-td-num">{{ d.refused }}/{{ d.total_prompts }}</td>
+            <td class="del-td-date">{{ d.delivered_at }}</td>
+            <td class="del-td-link"><a href="{{ d.hf_link }}" target="_blank" rel="noopener">HF &rarr;</a></td>
+            <td style="text-align:center;">
+                <button class="btn btn-sm btn-danger" data-delivery-id="{{ d.id }}" data-model-id="{{ d.model_id }}" onclick="deleteDelivery(this.dataset.deliveryId, this.dataset.modelId)">Delete</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}

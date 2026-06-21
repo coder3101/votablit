@@ -1,0 +1,23 @@
+{% if models.is_empty() %}
+<div class="empty">
+    <div class="empty-icon">&#128203;</div>
+    <h3>No models</h3>
+    <p>Models will appear here from the leaderboard</p>
+</div>
+{% else %}
+<ul class="admin-model-list">
+    {% for model in models %}
+    <li class="admin-model-row">
+        <div class="admin-model-rank">{{ loop.index }}</div>
+        <div class="admin-model-info">
+            <div class="admin-model-name">{{ model.model_id }}</div>
+            {% if model.hf_link.is_some() %}
+            <div class="admin-model-hf"><a href="{{ model.hf_link.as_ref().unwrap() }}" target="_blank" rel="noopener">{{ model.hf_link.as_ref().unwrap() }}</a></div>
+            {% endif %}
+        </div>
+        <div class="admin-model-votes">{{ model.vote_count }}<small> votes</small></div>
+        <button class="btn btn-sm btn-danger" data-model-id="{{ model.model_id }}" onclick="deleteModel(this.dataset.modelId)">Delete</button>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}

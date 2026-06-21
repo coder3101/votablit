@@ -419,3 +419,23 @@ pub async fn admin_prune_models(
         "deleted": deleted,
     })))
 }
+
+/// DELETE /api/admin/deliveries/:delivery_id
+///
+/// Admin endpoint to delete an abliterated model delivery.
+pub async fn admin_delete_delivery(
+    State(state): State<AppState>,
+    Path(delivery_id): Path<i64>,
+    _auth: AdminAuth,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let deleted = queries::delete_delivery(&state.db, delivery_id).await?;
+    if !deleted {
+        return Err(AppError::NotFound("Delivery not found".to_string()));
+    }
+
+    tracing::info!(delivery_id = delivery_id, "Admin deleted delivery");
+    Ok(Json(serde_json::json!({
+        "message": "Delivery deleted successfully",
+        "delivery_id": delivery_id,
+    })))
+}

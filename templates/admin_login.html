@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — Votablit</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page">
+    <header class="hero">
+        <h1><span>Vota</span>blit <span style="font-size:0.5em;color:var(--text-3)">Admin</span></h1>
+        <div class="hero-links">
+            <a href="/" class="gh-link" style="margin-right:auto">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                Back to site
+            </a>
+        </div>
+    </header>
+
+    <div class="card">
+        <div class="card-head"><h2>Admin Login</h2></div>
+        <div class="card-body" style="padding:1.5rem;">
+            <form id="login-form" hx-post="/admin/login"
+                  hx-swap="none">
+                <div class="field">
+                    <label class="field-label">Admin Token</label>
+                    <input id="admin-token-input" type="password" name="token" class="field-input" placeholder="Enter ADMIN_TOKEN" required autofocus
+                           style="width:100%;padding:0.625rem 0.75rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:inherit;font-size:0.875rem;">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-accent">Login</button>
+                </div>
+            </form>
+            <p class="hint">Token from ADMIN_TOKEN environment variable</p>
+        </div>
+    </div>
+
+    <div id="toasts"></div>
+
+    <script>
+        var _pendingToken = '';
+        document.getElementById('login-form').addEventListener('htmx:configRequest', function(e) {
+            _pendingToken = document.getElementById('admin-token-input').value;
+            e.detail.headers['Authorization'] = 'Bearer ' + _pendingToken;
+        });
+        document.body.addEventListener('htmx:afterRequest', function(e) {
+            if (e.detail.successful && _pendingToken) {
+                localStorage.setItem('admin_token', _pendingToken);
+                document.open();
+                document.write(e.detail.xhr.responseText);
+                document.close();
+            }
+        });
+        document.body.addEventListener('htmx:responseError', function(e) {
+            try { toast(JSON.parse(e.detail.xhr.responseText).error, false); }
+            catch { toast('Login failed', false); }
+        });
+        function toast(msg, ok) {
+            var d = document.createElement('div');
+            d.className = 'toast ' + (ok ? 'toast-ok' : 'toast-err');
+            d.textContent = msg;
+            document.getElementById('toasts').appendChild(d);
+            setTimeout(function() { d.remove(); }, 4000);
+        }
+    </script>
+</div>
+</body>
+</html>
