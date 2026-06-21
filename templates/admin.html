@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Votablit</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page">
+    <header class="hero">
+        <h1><span>Vota</span>blit <span style="font-size:0.5em;color:var(--text-3)">Admin</span></h1>
+        <div class="hero-links">
+            <a href="/" class="gh-link" style="margin-right:auto">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                Back to site
+            </a>
+        </div>
+    </header>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-value">{{ models.len() }}</div><div class="stat-label">Models</div></div>
+        <div class="stat"><div class="stat-value">{{ total_votes }}</div><div class="stat-label">Votes</div></div>
+        <div class="stat"><div class="stat-value">{{ total_deliveries }}</div><div class="stat-label">Delivered</div></div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <h2>Models</h2>
+            <div class="admin-actions">
+                <button class="btn btn-sm btn-ghost" id="prune-btn" onclick="pruneModels()">
+                    Prune Empty
+                </button>
+                <button class="btn btn-sm btn-accent" onclick="openDeliverModal()">
+                    Deliver
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="admin-models"
+                 hx-get="/admin/models"
+                 hx-trigger="every 10s, refresh"
+                 hx-swap="innerHTML"
+                 hx-target="this">
+                {% include "admin_models.html" %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem;">
+        <div class="card-head">
+            <h2>Deliveries</h2>
+        </div>
+        <div class="card-body">
+            <div id="admin-deliveries"
+                 hx-get="/admin/deliveries"
+                 hx-trigger="every 30s, refresh"
+                 hx-swap="innerHTML"
+                 hx-target="this">
+                {% include "admin_deliveries.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deliver-overlay" onclick="if(event.target===this)closeDeliverModal()">
+    <div class="modal">
+        <h3>Record Delivery</h3>
+        <form id="deliver-form">
+            <div class="field">
+                <label class="field-label">Model ID</label>
+                <input id="del-model-id" name="model_id" type="text" class="field-input" placeholder="e.g. org/model-name" required>
+            </div>
+            <div class="field">
+                <label class="field-label">HF Link</label>
+                <input id="del-hf-link" name="hf_link" type="url" class="field-input" placeholder="https://huggingface.co/..." required>
+            </div>
+            <div class="field">
+                <label class="field-label">KL Divergence</label>
+                <input id="del-kl" name="kl_divergence" type="number" step="0.0001" min="0" class="field-input" placeholder="0.0" required>
+            </div>
+            <div class="field">
+                <label class="field-label">Refused / Total Prompts</label>
+                <div style="display:flex;gap:0.5rem;">
+                    <input id="del-refused" name="refused" type="number" min="0" class="field-input" placeholder="Refused" required>
+                    <input id="del-total" name="total_prompts" type="number" min="1" class="field-input" placeholder="Total" required>
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Notes (optional)</label>
+                <input id="del-notes" name="notes" type="text" class="field-input" placeholder="Optional notes">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeDeliverModal()">Cancel</button>
+                <button type="submit" class="btn btn-accent">Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+    // Inject Authorization header into ALL HTMX requests on this page
+    document.body.addEventListener('htmx:configRequest', function(e) {
+        var token = localStorage.getItem('admin_token');
+        if (token) {
+            e.detail.headers['Authorization'] = 'Bearer ' + token;
+        }
+    });
+
+    function refreshAdminModels() {
+        htmx.trigger('#admin-models', 'refresh');
+    }
+
+    function refreshAdminDeliveries() {
+        htmx.trigger('#admin-deliveries', 'refresh');
+    }
+
+    // -- Prune (plain fetch, no HTMX) --
+    function pruneModels() {
+        if (!confirm('Delete all models with zero votes?')) return;
+        var token = localStorage.getItem('admin_token');
+        fetch('/api/admin/prune', {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token },
+        }).then(function(r) {
+            return r.json().then(function(d) {
+                if (r.ok) { toast(d.message || 'Pruned successfully', true); refreshAdminModels(); }
+                else { toast(d.error || 'Prune failed', false); }
+            });
+        }).catch(function() { toast('Prune failed', false); });
+    }
+
+    // -- Deliver (plain fetch with JSON body, no HTMX) --
+    document.getElementById('deliver-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var token = localStorage.getItem('admin_token');
+        var body = {
+            model_id: document.getElementById('del-model-id').value,
+            hf_link: document.getElementById('del-hf-link').value,
+            kl_divergence: parseFloat(document.getElementById('del-kl').value),
+            refused: parseInt(document.getElementById('del-refused').value),
+            total_prompts: parseInt(document.getElementById('del-total').value),
+            notes: document.getElementById('del-notes').value || null,
+        };
+        fetch('/api/admin/deliver', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        }).then(function(r) {
+            return r.json().then(function(d) {
+                if (r.ok) {
+                    toast(d.message || 'Delivery recorded', true);
+                    closeDeliverModal();
+                    document.getElementById('deliver-form').reset();
+                    refreshAdminModels();
+                    refreshAdminDeliveries();
+                } else {
+                    toast(d.error || 'Delivery failed', false);
+                }
+            });
+        }).catch(function() { toast('Delivery failed', false); });
+    });
+
+    // -- Delete delivery (plain fetch) --
+    function deleteDelivery(deliveryId, modelId) {
+        if (!confirm('Delete delivery for "' + modelId + '"?')) return;
+        var token = localStorage.getItem('admin_token');
+        fetch('/api/admin/deliveries/' + encodeURIComponent(deliveryId), {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token },
+        }).then(function(r) {
+            return r.json().then(function(d) {
+                if (r.ok) { toast(d.message || 'Delivery deleted', true); refreshAdminDeliveries(); }
+                else { toast(d.error || 'Delete failed', false); }
+            });
+        }).catch(function() { toast('Delete failed', false); });
+    }
+
+    // -- Delete model (plain fetch) --
+    function deleteModel(modelId) {
+        if (!confirm('Delete model "' + modelId + '" and all its votes?')) return;
+        var token = localStorage.getItem('admin_token');
+        fetch('/api/admin/models/' + encodeURIComponent(modelId), {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token },
+        }).then(function(r) {
+            return r.json().then(function(d) {
+                if (r.ok) { toast(d.message || 'Model deleted', true); refreshAdminModels(); }
+                else { toast(d.error || 'Delete failed', false); }
+            });
+        }).catch(function() { toast('Delete failed', false); });
+    }
+
+    function openDeliverModal() {
+        document.getElementById('deliver-overlay').classList.add('open');
+        document.getElementById('del-model-id').focus();
+    }
+    function closeDeliverModal() {
+        document.getElementById('deliver-overlay').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDeliverModal();
+    });
+
+    document.body.addEventListener('htmx:responseError', function(e) {
+        try { toast(JSON.parse(e.detail.xhr.responseText).error, false); }
+        catch(err) { toast('Request failed', false); }
+    });
+
+    function toast(msg, ok) {
+        var d = document.createElement('div');
+        d.className = 'toast ' + (ok ? 'toast-ok' : 'toast-err');
+        d.textContent = msg;
+        document.getElementById('toasts').appendChild(d);
+        setTimeout(function() { d.remove(); }, 4000);
+    }
+</script>
+</body>
+</html>

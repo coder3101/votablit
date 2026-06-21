@@ -857,6 +857,79 @@ async fn admin_prune_when_no_zero_vote_models(pool: SqlitePool) {
 }
 
 // ===================================================================
+// Admin delete delivery tests
+// ===================================================================
+
+#[sqlx::test]
+async fn admin_delete_delivery_removes_delivery(pool: SqlitePool) {
+    let mut app = test_app(pool);
+
+    // Create a model, then deliver it
+    send(
+        &mut app,
+        json_post_with_auth(
+            "/api/admin/models",
+            r#"{"model_id": "del-delivery-test", "hf_link": ""}"#,
+        ),
+    )
+    .await;
+
+    send(
+        &mut app,
+        json_post_with_auth(
+            "/api/admin/deliver",
+            r#"{"model_id": "del-delivery-test", "hf_link": "https://hf.co/test", "kl_divergence": 0.01, "refused": 0, "total_prompts": 100}"#,
+        ),
+    )
+    .await;
+
+    // Find the delivery ID
+    let (_, body) = send(&mut app, get("/api/deliveries?per_page=100")).await;
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    let initial_total = json["total"].as_i64().unwrap();
+    let items = json["items"].as_array().unwrap();
+    let ours = items.iter().find(|i| i["model_id"] == "del-delivery-test").unwrap();
+    let delivery_id = ours["id"].as_i64().unwrap();
+
+    // Delete the delivery
+    let path = format!("/api/admin/deliveries/{delivery_id}");
+    let (status, body) = send(&mut app, json_delete_with_auth(&path)).await;
+    assert_eq!(status, StatusCode::OK);
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert_eq!(json["delivery_id"], delivery_id);
+
+    // Verify it's gone
+    let (_, body) = send(&mut app, get("/api/deliveries?per_page=100")).await;
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert_eq!(json["total"].as_i64().unwrap(), initial_total - 1);
+    let items = json["items"].as_array().unwrap();
+    assert!(items.iter().all(|i| i["model_id"] != "del-delivery-test"));
+}
+
+#[sqlx::test]
+async fn admin_delete_delivery_nonexistent_returns_404(pool: SqlitePool) {
+    let mut app = test_app(pool);
+
+    let (status, body) = send(&mut app, json_delete_with_auth("/api/admin/deliveries/999999")).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert!(json["error"].as_str().unwrap().contains("not found"));
+}
+
+#[sqlx::test]
+async fn admin_delete_delivery_unauthorized(pool: SqlitePool) {
+    let mut app = test_app(pool);
+
+    let req = Request::builder()
+        .method("DELETE")
+        .uri("/api/admin/deliveries/1")
+        .body(Body::empty())
+        .unwrap();
+    let (status, _) = send(&mut app, req).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+}
+
+// ===================================================================
 // HuggingFace validation tests (use test_app_with_hf for real HF checks)
 // ===================================================================
 

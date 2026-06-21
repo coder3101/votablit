@@ -56,8 +56,27 @@ Requires `Authorization: Bearer <ADMIN_TOKEN>`.
 | `POST` | `/api/admin/models` | Create model with optional HF link |
 | `PUT` | `/api/admin/models/{id}` | Update a model's HF link |
 | `DELETE` | `/api/admin/models/{id}` | Delete a model and its votes |
+| `DELETE` | `/api/admin/deliveries/{id}` | Delete an abliterated model delivery |
 | `DELETE` | `/api/admin/prune` | Delete all zero-vote models |
 | `POST` | `/api/admin/deliver` | Record an abliterated model delivery |
+
+### Admin UI
+
+Available at `/admin/login`. Enter the `ADMIN_TOKEN` to access the dashboard.
+
+| Path | Description |
+|------|-------------|
+| `/admin/login` | Login form (public) |
+| `/admin` | Dashboard — manage models and deliveries (requires auth) |
+
+The admin dashboard provides:
+- **Stats overview** — model count, total votes, deliveries
+- **Model management** — view leaderboard, delete models, prune zero-vote models
+- **Delivery management** — record new deliveries, view/delete existing ones
+- **Auto-refresh** — model list refreshes every 10s, deliveries every 30s
+
+Auth uses `localStorage`: the token is stored client-side after login and sent as
+a `Bearer` header on every subsequent request.
 
 ### Rate Limits
 
@@ -70,7 +89,7 @@ Requires `Authorization: Bearer <ADMIN_TOKEN>`.
 ```bash
 make help            # list all targets
 make run             # run locally (ADMIN_TOKEN=dev-secret)
-make test            # run all 81 tests
+make test            # run all tests
 make lint            # clippy
 make ci              # lint + test
 make sqlx-prepare    # regenerate offline query cache
@@ -85,6 +104,6 @@ make clean           # remove artifacts
 make test
 ```
 
-81 tests covering queries, extractors, HF validation, DB migrations, all API endpoints, rate limiting, auth, pagination, and edge cases.
+88 tests covering queries, extractors, HF validation, DB migrations, all API endpoints (including admin delivery deletion), rate limiting, auth, pagination, and edge cases.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for test architecture, security hardening details, and development workflow.

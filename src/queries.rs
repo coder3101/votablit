@@ -349,6 +349,19 @@ pub async fn prune_zero_vote_models(
     Ok(result.rows_affected() as i64)
 }
 
+/// Delete a delivery by ID.
+///
+/// Returns `true` if the delivery existed and was deleted.
+pub async fn delete_delivery(
+    pool: &sqlx::SqlitePool,
+    delivery_id: i64,
+) -> Result<bool, AppError> {
+    let result = sqlx::query!("DELETE FROM deliveries WHERE id = ?", delivery_id)
+        .execute(pool)
+        .await?;
+    Ok(result.rows_affected() > 0)
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -592,5 +605,32 @@ mod tests {
     async fn prune_when_no_zero_vote_models(pool: SqlitePool) {
         let pruned = prune_zero_vote_models(&pool).await.unwrap();
         assert_eq!(pruned, 0);
+    }
+
+    #[sqlx::test]
+    async fn delete_delivery_removes_row(pool: SqlitePool) {
+        insert_delivery(
+            &pool, "test/del-delivery", 5, "https://hf.co/test", &None,
+            0.02, 1, 128,
+        )
+        .await
+        .unwrap();
+
+        let deliveries = fetch_deliveries(&pool, 100, 0, DeliverySort::Date).await.unwrap();
+        let ours = deliveries.iter().find(|d| d.model_id == "test/del-delivery").unwrap();
+        let id = ours.id;
+
+        let deleted = delete_delivery(&pool, id).await.unwrap();
+        assert!(deleted);
+
+        // Verify it's gone
+        let deliveries = fetch_deliveries(&pool, 100, 0, DeliverySort::Date).await.unwrap();
+        assert!(deliveries.iter().all(|d| d.model_id != "test/del-delivery"));
+    }
+
+    #[sqlx::test]
+    async fn delete_delivery_nonexistent_returns_false(pool: SqlitePool) {
+        let deleted = delete_delivery(&pool, 999999).await.unwrap();
+        assert!(!deleted);
     }
 }

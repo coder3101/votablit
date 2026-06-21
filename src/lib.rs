@@ -28,6 +28,11 @@ pub fn app(state: AppState) -> Router {
         .route("/model-select", get(pages::model_select))
         .route("/vote", post(pages::vote_page))
         .route("/add-model", post(pages::create_model_page))
+        // Admin UI
+        .route("/admin", get(admin::admin_page))
+        .route("/admin/login", get(admin::admin_login_page).post(admin::admin_login))
+        .route("/admin/models", get(admin::admin_models))
+        .route("/admin/deliveries", get(admin::admin_deliveries))
         // JSON API
         .route("/api/leaderboard", get(api::get_leaderboard))
         .route("/api/deliveries", get(api::get_deliveries))
@@ -41,6 +46,10 @@ pub fn app(state: AppState) -> Router {
         )
         .route("/api/admin/prune", delete(api::admin_prune_models))
         .route("/api/admin/deliver", post(api::admin_deliver))
+        .route(
+            "/api/admin/deliveries/{delivery_id}",
+            delete(api::admin_delete_delivery),
+        )
         // Static files
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state)
